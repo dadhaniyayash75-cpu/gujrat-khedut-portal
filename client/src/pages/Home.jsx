@@ -1,0 +1,1723 @@
+
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
+import api from '../api';
+
+
+    const { useMemo } = React;
+
+    // --- DICTIONARY & TRANSLATIONS ---
+    const i18n = {
+      gu: {
+        portalName: "ગુજરાત ખેડૂત સહાય પોર્ટલ",
+        portalSub: "ખેતીવાડી, બાગાયત, પશુપાલન અને એગ્રો બિઝનેસ યોજનાઓ",
+        officialBadge: "i-Khedut • GAIC • ગુજરાત કૃષિ વિભાગ માન્ય પોર્ટલ",
+        founderCredit: "Founder: Yash Dadhaniya (Village: Buri)",
+        switchLang: "English",
+        searchPlaceholder: "યોજના, ટ્રેક્ટર, GAIC પ્રોસેસિંગ, પાક વીમો કે સહાય શોધો...",
+        allGovt: "તમામ સરકાર",
+        gujaratGovt: "ગુજરાત સરકાર",
+        centralGovt: "ભારત સરકાર",
+        allCategories: "બધી કેટેગરી",
+        filterHeading: "યોજનાઓ ફિલ્ટર કરો",
+        schemesFound: "યોજનાઓ ઉપલબ્ધ",
+        viewDetails: "સંપૂર્ણ વિગત અને કાગળો",
+        directApply: "સત્તાવાર પોર્ટલ પર અરજી કરો",
+        shareWhatsapp: "વોટ્સએપ પર શેર કરો",
+        docChecklist: "જરૂરી દસ્તાવેજો (ચેકલિસ્ટ)",
+        benefits: "યોજનાનો લાભ / સબસિડી",
+        eligibility: "પાત્રતા ના માપદંડ",
+        deadline: "અરજી સમયગાળો",
+        department: "વિભાગ",
+        statusActive: "અરજી ચાલુ છે",
+        statusAlways: "કાયમી ખુલ્લું",
+        mandiTitle: "APMC બજાર ભાવ (આજના લાઈવ ભાવ પ્રતિ ૨૦ કિલો / મણ)",
+        calculatorTitle: "ખેડૂત પાત્રતા ચકાસણી કેલ્ક્યુલેટર",
+        calculatorSub: "તમારી જમીન અને જરૂરિયાત પસંદ કરી તમને મળવાપાત્ર યોજનાઓ શોધો",
+        checkEligibilityBtn: "યોજનાઓ શોધો",
+        resetFilters: "ફિલ્ટર રીસેટ કરો",
+        helplineTitle: "ખેડૂત સહાય હેલ્પલાઇન નંબર્સ",
+        kisanCallCenter: "કિસાન કોલ સેન્ટર (ટોલ ફ્રી)",
+        ikhedutHelp: "i-Khedut પોર્ટલ હેલ્પડેસ્ક",
+        gaicHelp: "GAIC એગ્રો પ્રોસેસિંગ હેલ્પલાઇન",
+        ggrcHelp: "GGRC ટપક સિંચાઈ હેલ્પલાઇન",
+        disclaimer: "નોંધ: આ પોર્ટલ ખેડૂતોની જાણકારી અને સરળતા માટે બનાવેલ છે. તમામ અરજીઓ સંબંધિત સત્તાવાર પોર્ટલ (i-Khedut / GAIC / PM-Kisan) પર જ કરવાની રહેશે.",
+        categories: {
+          all: "તમામ યોજનાઓ",
+          machinery: "કૃષિ યાંત્રીકીકરણ (ટ્રેક્ટર/ઓજાર)",
+          processing: "એગ્રો પ્રોસેસિંગ અને કોલ્ડ સ્ટોરેજ (GAIC)",
+          horticulture: "બાગાયત અને ગ્રીનહાઉસ (i-Khedut)",
+          animal: "પશુપાલન અને કડબ કટર (Animal Husbandry)",
+          irrigation: "સિંચાઈ, સોલાર અને પાઇપલાઇન",
+          organic: "પ્રાકૃતિક ખેતી (દેશી ગાય/સોઈલ કાર્ડ)",
+          insurance: "પાક સહાય અને રક્ષણ (MKSY)",
+          financial: "આર્થિક સહાય (PM-Kisan/KCC)"
+        }
+      },
+      en: {
+        portalName: "Gujarat Khedut Sahay Portal",
+        portalSub: "Agriculture, Horticulture, Animal Husbandry & Agro Business Schemes",
+        officialBadge: "i-Khedut • GAIC • Gujarat Agri Department Verified",
+        founderCredit: "Founder: Yash Dadhaniya (Village: Buri)",
+        switchLang: "ગુજરાતી",
+        searchPlaceholder: "Search scheme, tractor, GAIC processing, crop insurance...",
+        allGovt: "All Governments",
+        gujaratGovt: "Gujarat Govt",
+        centralGovt: "Central Govt",
+        allCategories: "All Categories",
+        filterHeading: "Filter Schemes",
+        schemesFound: "schemes available",
+        viewDetails: "View Details & Checklist",
+        directApply: "Apply on Official Portal",
+        shareWhatsapp: "Share on WhatsApp",
+        docChecklist: "Required Documents (Checklist)",
+        benefits: "Benefits / Subsidy",
+        eligibility: "Eligibility Criteria",
+        deadline: "Application Window",
+        department: "Department",
+        statusActive: "Applications Open",
+        statusAlways: "Year-Round Open",
+        mandiTitle: "Live APMC Mandi Rates (Per 20 KG / Mann)",
+        calculatorTitle: "Farmer Eligibility Calculator",
+        calculatorSub: "Select your land size and requirements to find schemes you qualify for",
+        checkEligibilityBtn: "Find Eligible Schemes",
+        resetFilters: "Reset Filters",
+        helplineTitle: "Farmer Helpline Numbers",
+        kisanCallCenter: "Kisan Call Center (Toll-Free)",
+        ikhedutHelp: "i-Khedut Portal Helpdesk",
+        gaicHelp: "GAIC Agro Processing Help",
+        ggrcHelp: "GGRC Micro-Irrigation Help",
+        disclaimer: "Disclaimer: This platform is created for informational convenience of farmers. Official applications must be submitted via respective government portals (i-Khedut / GAIC / PM-Kisan).",
+        categories: {
+          all: "All Schemes",
+          machinery: "Farm Machinery (Tractors/Tools)",
+          processing: "Agro Processing & Cold Storage (GAIC)",
+          horticulture: "Horticulture & Greenhouses (i-Khedut)",
+          animal: "Animal Husbandry & Dairy Tools",
+          irrigation: "Irrigation, Solar & Pipelines",
+          organic: "Natural Farming (Desi Cow/Soil Card)",
+          insurance: "Crop Relief & Protection (MKSY)",
+          financial: "Direct Financial Aid (PM-Kisan/KCC)"
+        }
+      }
+    };
+
+    // --- EXPANDED SCHEMES DATA FROM i-KHEDUT, GAIC & AGRI DEPT ---
+    const SCHEMES_DATA = [
+      {
+        id: "ikhedut-tractor-sahay",
+        govType: "gujarat",
+        sourceDept: "ikhedut",
+        categoryKey: "machinery",
+        title_gu: "i-Khedut ટ્રેક્ટર સહાય યોજના",
+        title_en: "i-Khedut Tractor Subsidy Scheme",
+        dept_gu: "કૃષિ અને ખેડૂત કલ્યાણ વિભાગ (i-Khedut પોર્ટલ)",
+        dept_en: "Dept of Agriculture (i-Khedut Portal)",
+        benefit_gu: "ટ્રેક્ટર ખરીદી પર ₹45,000 થી ₹60,000 સુધીની સબસિડી (અથવા કિંમતના 25% થી 35%).",
+        benefit_en: "Subsidy of ₹45,000 to ₹60,000 (or 25% to 35% of total cost) on tractor purchase.",
+        eligibility_gu: "જમીન ધારક તમામ ખેડૂત. અનુસૂચિત જાતિ/જનજાતિ અને મહિલા ખેડૂતોને મહત્તમ લાભ. છેલ્લા 10 વર્ષમાં લાભ લીધેલ ન હોવો જોઈએ.",
+        eligibility_en: "Land-owning farmers. Higher subsidy for SC/ST and women farmers. Must not have availed tractor subsidy in last 10 years.",
+        deadline_gu: "i-Khedut પોર્ટલ પર વાર્ષિક લક્ષ્યાંક આધારિત અરજીઓ",
+        deadline_en: "Target-based annual window on i-Khedut portal",
+        status: "active",
+        portalUrl: "https://ikhedut.gujarat.gov.in",
+        docs_gu: [
+          "જમીનના ૭/૧૨ અને ૮-અ ઉતારા",
+          "ખેડૂતનું આધાર કાર્ડ",
+          "બેંક પાસબુક અથવા કેન્સલ ચેક (આધાર લિંક્ડ)",
+          "માન્ય ડીલર પાસેથી મેળવેલ ટ્રેક્ટર ક્વોટેશન"
+        ],
+        docs_en: [
+          "7/12 & 8-A Land Records",
+          "Farmer's Aadhaar Card",
+          "Bank Passbook or Cancelled Cheque",
+          "Official Tractor Quotation from authorized dealer"
+        ],
+        badge_gu: "i-Khedut સુપરહિટ યોજના",
+        badge_en: "i-Khedut Flagship",
+        icon: "🚜"
+      },
+      {
+        id: "ikhedut-pipeline-irrigation",
+        govType: "gujarat",
+        sourceDept: "ikhedut",
+        categoryKey: "irrigation",
+        title_gu: "i-Khedut અંડરગ્રાઉન્ડ પાઇપલાઇન સહાય",
+        title_en: "i-Khedut Underground Pipeline Subsidy",
+        dept_gu: "ખેતી નિયામકશ્રીની કચેરી (i-Khedut)",
+        dept_en: "Directorate of Agriculture (i-Khedut)",
+        benefit_gu: "ખેતરમાં પાણી પહોંચાડવા પાઇપલાઇન નાખવા માટે ખર્ચના 50% અથવા મહત્તમ ₹15,000 થી ₹35,000 સુધીની સબસિડી.",
+        benefit_en: "50% of cost or maximum ₹15,000 to ₹35,000 subsidy for laying underground water pipelines.",
+        eligibility_gu: "સિંચાઈ સ્ત્રોત (બોરવેલ/કૂવો) ધરાવતા તમામ ખાતેદાર ખેડૂતો.",
+        eligibility_en: "All landholder farmers having active water source (borewell/well).",
+        deadline_gu: "i-Khedut પોર્ટલ પર અરજી વિન્ડો",
+        deadline_en: "Open during i-Khedut portal window",
+        status: "active",
+        portalUrl: "https://ikhedut.gujarat.gov.in",
+        docs_gu: [
+          "૭/૧૨ અને ૮-અ જમીન નકલ",
+          "આધાર કાર્ડ",
+          "ISI માર્કા પાઇપનું GST બિલ",
+          "બેંક પાસબુક નકલ"
+        ],
+        docs_en: [
+          "7/12 and 8-A Land Records",
+          "Aadhaar Card",
+          "GST Invoice of ISI-marked pipes",
+          "Bank Passbook copy"
+        ],
+        badge_gu: "પાણી બચાવ સહાય",
+        badge_en: "Water Conservation Aid",
+        icon: "🚰"
+      },
+      {
+        id: "gaic-food-processing-coldchain",
+        govType: "gujarat",
+        sourceDept: "gaic",
+        categoryKey: "processing",
+        title_gu: "GAIC એગ્રો પ્રોસેસિંગ અને કોલ્ડ સ્ટોરેજ સબસિડી",
+        title_en: "GAIC Agro Food Processing & Cold Storage Subsidy",
+        dept_gu: "ગુજરાત એગ્રો ઇન્ડસ્ટ્રીઝ કોર્પોરેશન લિ. (GAIC)",
+        dept_en: "Gujarat Agro Industries Corporation Ltd. (GAIC)",
+        benefit_gu: "એગ્રો ફૂડ પ્રોસેસિંગ યુનિટ, મસાલા પિસાઈ, દાળ મિલ અથવા કોલ્ડ સ્ટોરેજ સ્થાપવા માટે 25% થી 35% કેપિટલ સબસિડી (મહત્તમ ₹50 લાખ થી ₹5 કરોડ સુધીની સહાય!).",
+        benefit_en: "25% to 35% Capital Investment Subsidy (from ₹50 Lakhs up to ₹5 Crore) for establishing Agro Food Processing Units, Cold Chains, and Mills.",
+        eligibility_gu: "ખેડૂતો, ખેડૂત જૂથો (FPO), વ્યક્તિગત ઉદ્યોગસાહસિકો અને સહકારી મંડળીઓ.",
+        eligibility_en: "Farmers, Farmer Producer Organizations (FPOs), agribusiness entrepreneurs, and cooperative societies.",
+        deadline_gu: "GAIC પોર્ટલ પર ચાલુ વર્ષ માટે અરજીઓ ખુલ્લી છે",
+        deadline_en: "Applications open via official GAIC portal",
+        status: "active",
+        portalUrl: "https://gaic.gujarat.gov.in",
+        docs_gu: [
+          "પ્રોજેક્ટ રિપોર્ટ (DPR)",
+          "જમીનના દસ્તાવેજ / લીઝ એગ્રીમેન્ટ",
+          "બેંક લોન મંજૂરી પત્ર (Term Loan)",
+          "પાન કાર્ડ અને આધાર કાર્ડ",
+          "ઉદ્યમ રજીસ્ટ્રેશન (MSME)"
+        ],
+        docs_en: [
+          "Detailed Project Report (DPR)",
+          "Land Ownership or Lease Agreement",
+          "Bank Term Loan sanction letter",
+          "PAN Card & Aadhaar Card",
+          "Udyam MSME Registration"
+        ],
+        badge_gu: "મોટી સબસિડી (GAIC યોજના)",
+        badge_en: "High Subsidy (GAIC)",
+        icon: "🏭"
+      },
+      {
+        id: "gaic-fpo-empowerment",
+        govType: "gujarat",
+        sourceDept: "gaic",
+        categoryKey: "processing",
+        title_gu: "GAIC કિસાન ઉત્પાદક સંગઠન (FPO) પ્રોત્સાહન યોજના",
+        title_en: "GAIC Farmer Producer Organization (FPO) Scheme",
+        dept_gu: "ગુજરાત એગ્રો ઇન્ડસ્ટ્રીઝ કોર્પોરેશન (GAIC)",
+        dept_en: "Gujarat Agro Industries Corporation (GAIC)",
+        benefit_gu: "FPO ને ગ્રેડિંગ, સોર્ટિંગ, પેકિંગ અને માર્કેટિંગ ઈન્ફ્રાસ્ટ્રક્ચર માટે ₹15 લાખ સુધીની નાણાકીય સહાય અને વ્યાજ સબવેન્શન.",
+        benefit_en: "Financial assistance up to ₹15 Lakhs and interest subvention for sorting, grading, packing, and direct agri marketing.",
+        eligibility_gu: "ગુજરાતમાં નોંધાયેલા તમામ સક્રિય ખેડૂત ઉત્પાદક સંગઠનો (FPO/FPC).",
+        eligibility_en: "Registered and active Farmer Producer Organizations in Gujarat.",
+        deadline_gu: "કાયમી ઉપલબ્ધ",
+        deadline_en: "Available round the year",
+        status: "always",
+        portalUrl: "https://gaic.gujarat.gov.in",
+        docs_gu: [
+          "FPO રજીસ્ટ્રેશન પ્રમાણપત્ર",
+          "સભ્ય ખેડૂતોની યાદી અને ૭/૧૨",
+          "બેંક ઓડિટ રિપોર્ટ",
+          "બિઝનેસ પ્લાન"
+        ],
+        docs_en: [
+          "FPO Registration Certificate",
+          "List of farmer members with land records",
+          "Audited financial statements",
+          "Business action plan"
+        ],
+        badge_gu: "જૂથ ખેતી લાભ",
+        badge_en: "FPO Cluster Aid",
+        icon: "👥"
+      },
+      {
+        id: "mukhyamantri-kisan-sahay",
+        govType: "gujarat",
+        sourceDept: "agri_dept",
+        categoryKey: "insurance",
+        title_gu: "મુખ્યમંત્રી કિસાન સહાય યોજના (MKSY)",
+        title_en: "Mukhyamantri Kisan Sahay Yojana (MKSY)",
+        dept_gu: "કૃષિ, ખેડૂત કલ્યાણ અને સહકાર વિભાગ, ગુજરાત સરકાર",
+        dept_en: "Dept of Agriculture & Farmers Welfare, Govt of Gujarat",
+        benefit_gu: "દુષ્કાળ, અતિવૃષ્ટિ કે માવઠામાં 33% થી વધુ નુકસાન પર ₹20,000 થી ₹25,000/હેક્ટર સહાય (મહત્તમ 4 હેક્ટર). ખેડૂતે 0% પ્રીમિયમ ભરવાનું!",
+        benefit_en: "Crop loss compensation of ₹20,000 to ₹25,000/ha (max 4 ha) for drought, heavy rain, or unseasonal weather. 0% premium required!",
+        eligibility_gu: "રાજ્યના તમામ મહેસૂલી ગામોના ખાતેદાર ખેડૂતો અને વન અધિકાર સનદ ધારકો.",
+        eligibility_en: "All revenue village khatedar farmers and Forest Rights Act title holders across Gujarat.",
+        deadline_gu: "કુદરતી આપત્તિ બાદ સરકાર દ્વારા પોર્ટલ ખુલે ત્યારે",
+        deadline_en: "Opened post natural calamity declaration",
+        status: "active",
+        portalUrl: "https://agri.gujarat.gov.in",
+        docs_gu: [
+          "૭/૧૨ અને ૮-અ ઉતારા",
+          "આધાર કાર્ડ",
+          "બેંક પાસબુક (IFSC કોડ સાથે)",
+          "તલાટી-મંત્રીનો વાવણી પંચનામો અહેવાલ"
+        ],
+        docs_en: [
+          "7/12 & 8-A Land Records",
+          "Aadhaar Card",
+          "Bank Passbook with IFSC",
+          "Talati Sowing / Crop Damage Panchnama"
+        ],
+        badge_gu: "ગુજરાત કૃષિ વિભાગ માન્ય",
+        badge_en: "Gujarat Agri Dept Approved",
+        icon: "🛡️"
+      },
+      {
+        id: "ikhedut-greenhouse-bagayat",
+        govType: "gujarat",
+        sourceDept: "ikhedut",
+        categoryKey: "horticulture",
+        title_gu: "i-Khedut બાગાયત ગ્રીનહાઉસ અને નેટહાઉસ સહાય",
+        title_en: "i-Khedut Greenhouse & Shade Net House Subsidy",
+        dept_gu: "બાગાયત નિયામકશ્રીની કચેરી (i-Khedut)",
+        dept_en: "Directorate of Horticulture (i-Khedut)",
+        benefit_gu: "હાઇટેક ગ્રીન હાઉસ અથવા નેટ હાઉસ બનાવવા માટે 50% થી 65% સુધીની સબસિડી. બેમોસમી શાકભાજી-ફૂલો માટે ઉત્તમ.",
+        benefit_en: "50% to 65% subsidy on construction cost of modern Greenhouses and Shade Net Houses for off-season vegetable & floriculture.",
+        eligibility_gu: "પોતાની જમીન અને સિંચાઈ ધરાવતા તમામ બાગાયતી ખેડૂતો.",
+        eligibility_en: "Horticulture farmers having suitable land and irrigation facility.",
+        deadline_gu: "i-Khedut બાગાયત કેલેન્ડર મુજબ",
+        deadline_en: "As per i-Khedut horticulture calendar",
+        status: "active",
+        portalUrl: "https://ikhedut.gujarat.gov.in",
+        docs_gu: [
+          "૭/૧૨ અને ૮-અ ઉતારા",
+          "આધાર કાર્ડ",
+          "એમ્પેનલ્ડ કંપનીનું ક્વોટેશન",
+          "જમીન માટી અને પાણી પરીક્ષણ રિપોર્ટ"
+        ],
+        docs_en: [
+          "7/12 and 8-A records",
+          "Aadhaar Card",
+          "Empanelled vendor technical quotation",
+          "Soil & water test report"
+        ],
+        badge_gu: "આધુનિક ખેતી સબસિડી",
+        badge_en: "Hi-Tech Agri Subsidy",
+        icon: "🏡"
+      },
+      {
+        id: "ikhedut-chaff-cutter-pashupalan",
+        govType: "gujarat",
+        sourceDept: "ikhedut",
+        categoryKey: "animal",
+        title_gu: "i-Khedut કડબ કટર (ઘાસ કાપવાનું મશીન) સહાય",
+        title_en: "i-Khedut Power Chaff Cutter Subsidy",
+        dept_gu: "પશુપાલન નિયામકશ્રીની કચેરી (i-Khedut)",
+        dept_en: "Directorate of Animal Husbandry (i-Khedut)",
+        benefit_gu: "પાવર ડ્રિવન કડબ કટર મશીન ખરીદી પર 75% અથવા મહત્તમ ₹18,000 થી ₹20,000 ની સહાય. ઘાસચારાનો બગાડ અટકાવે.",
+        benefit_en: "Up to 75% or ₹18,000 - ₹20,000 subsidy on purchase of power-operated fodder chaff cutters.",
+        eligibility_gu: "ઓછામાં ઓછા ૨ થી વધુ પશુઓ ધરાવતા તમામ ખેડૂતો અને પશુપાલકો.",
+        eligibility_en: "Farmers & dairy rearers maintaining at least 2 milch animals.",
+        deadline_gu: "i-Khedut પશુપાલન અરજી વિન્ડો",
+        deadline_en: "Active on i-Khedut Animal Husbandry window",
+        status: "active",
+        portalUrl: "https://ikhedut.gujarat.gov.in",
+        docs_gu: [
+          "પશુ હોવા અંગેનું પ્રમાણપત્ર",
+          "આધાર કાર્ડ",
+          "૭/૧૨-૮-અ અથવા પશુપાલક કાર્ડ",
+          "માન્ય ડીલરનું બિલ"
+        ],
+        docs_en: [
+          "Livestock possession certificate",
+          "Aadhaar Card",
+          "7/12 or Dairy card",
+          "Authorized dealer invoice"
+        ],
+        badge_gu: "પશુપાલન સહાય",
+        badge_en: "Dairy Farmer Aid",
+        icon: "🌾"
+      },
+      {
+        id: "ggrc-drip-irrigation",
+        govType: "gujarat",
+        sourceDept: "agri_dept",
+        categoryKey: "irrigation",
+        title_gu: "GGRC ટપક અને ફુવારા પદ્ધતિ સહાય",
+        title_en: "GGRC Micro Irrigation (Drip/Sprinkler) Subsidy",
+        dept_gu: "ગુજરાત ગ્રીન રિવોલ્યુશન કંપની (GGRC) / કૃષિ વિભાગ",
+        dept_en: "Gujarat Green Revolution Company (GGRC)",
+        benefit_gu: "ટપક સિંચાઈ લગાવવા માટે ખર્ચ પર 70% થી 85% સુધીની સરકારી સબસિડી. 50% સુધી પાણી અને વીજળીની બચત.",
+        benefit_en: "70% to 85% government subsidy on installation cost. Saves up to 50% water and power.",
+        eligibility_gu: "પોતાનું સિંચાઈ સાધન (બોરવેલ/કૂવો) ધરાવતા અથવા સહિયારી સિંચાઈ ધરાવતા તમામ ખેડૂતો.",
+        eligibility_en: "All farmers having own or shared irrigation source.",
+        deadline_gu: "કાયમી ખુલ્લું (GGRC પોર્ટલ)",
+        deadline_en: "Open year-round via GGRC",
+        status: "always",
+        portalUrl: "https://ggrc.co.in",
+        docs_gu: [
+          "૭/૧૨, ૮-અ અને ૬-અ ની નકલ",
+          "આધાર કાર્ડ અને પાસપોર્ટ સાઇઝ ફોટો",
+          "વીજ બિલ અથવા સિંચાઈ પુરાવો",
+          "ખેતરનો નકશો"
+        ],
+        docs_en: [
+          "7/12, 8-A & 6-A Records",
+          "Aadhaar Card and photos",
+          "Electricity bill or water source proof",
+          "Farm sketch/map"
+        ],
+        badge_gu: "80% સુધી સબસિડી",
+        badge_en: "Up to 80% Subsidy",
+        icon: "💧"
+      },
+      {
+        id: "desi-cow-natural-farming",
+        govType: "gujarat",
+        sourceDept: "agri_dept",
+        categoryKey: "organic",
+        title_gu: "દેશી ગાય આધારિત પ્રાકૃતિક ખેતી સહાય યોજના",
+        title_en: "Desi Cow-Based Natural Farming Assistance Scheme",
+        dept_gu: "કૃષિ, ખેડૂત કલ્યાણ અને સહકાર વિભાગ, ગુજરાત સરકાર",
+        dept_en: "Dept of Agriculture & Farmers Welfare, Govt of Gujarat",
+        benefit_gu: "દેશી ગાયના નિભાવ ખર્ચ માટે દર મહિને ₹900 એટલે કે વાર્ષિક ₹10,800 સીધા ખેડૂતના ખાતામાં.",
+        benefit_en: "Direct financial grant of ₹900/month (₹10,800/year) for maintenance of indigenous Desi cow.",
+        eligibility_gu: "જમીન હોય અને એક દેશી ગાય ધરાવતા હોય. ઇયર-ટેગિંગ ફરજિયાત અને પ્રાકૃતિક ખેતી કરતા હોવા જોઈએ.",
+        eligibility_en: "Farmer owning land and maintaining tagged indigenous cow, practicing natural farming.",
+        deadline_gu: "i-Khedut પોર્ટલ પર નિયમિત ખુલે છે",
+        deadline_en: "Periodically opened on i-Khedut portal",
+        status: "active",
+        portalUrl: "https://ikhedut.gujarat.gov.in",
+        docs_gu: [
+          "૭/૧૨ અને ૮-અ ના ઉતારા",
+          "ગાયના કાનનો ટેગ નંબર (Ear Tag ID)",
+          "પ્રાકૃતિક ખેતી તાલીમ પ્રમાણપત્ર",
+          "આધાર કાર્ડ અને બેંક વિગત"
+        ],
+        docs_en: [
+          "7/12 & 8-A Land Records",
+          "Cow Ear-Tag identification number",
+          "Natural Farming Training Certificate",
+          "Aadhaar & Bank passbook details"
+        ],
+        badge_gu: "વાર્ષિક ₹10,800 સહાય",
+        badge_en: "₹10,800/yr Direct Aid",
+        icon: "🐄"
+      },
+      {
+        id: "surya-shakti-kisan-kusum",
+        govType: "gujarat",
+        sourceDept: "agri_dept",
+        categoryKey: "irrigation",
+        title_gu: "સૂર્યશક્તિ કિસાન યોજના (SKY) / PM-KUSUM સોલાર પંપ",
+        title_en: "Surya Shakti Kisan Yojana (SKY) & PM-KUSUM Solar Pump",
+        dept_gu: "ઊર્જા અને પેટ્રોકેમિકલ્સ વિભાગ / કૃષિ વિભાગ",
+        dept_en: "Energy & Petrochemicals Dept & MNRE",
+        benefit_gu: "સોલાર પંપ માટે 60% સરકારી સબસિડી, 30% સસ્તી લોન, ખેડૂતે માત્ર 10% જ રકમ ભરવાની. વધારાની વીજળી ગ્રીડમાં વેચીને દર વર્ષે કમાણી!",
+        benefit_en: "60% government subsidy, 30% loan, farmer pays only 10%. Opportunity to earn by selling surplus solar power to grid!",
+        eligibility_gu: "ખેતી વિષયક વીજ જોડાણ ધરાવતા અથવા ઓફ-ગ્રીડ ખેતર ધરાવતા ખેડૂતો.",
+        eligibility_en: "Farmers with agricultural power connection or off-grid farm land.",
+        deadline_gu: "વીજ કંપનીઓ દ્વારા તબક્કાવાર જાહેર થાય છે",
+        deadline_en: "Announced phase-wise by Gujarat discoms",
+        status: "active",
+        portalUrl: "https://ikhedut.gujarat.gov.in",
+        docs_gu: [
+          "ખેતી જમીનની ૭/૧૨-૮-અ નકલ",
+          "વીજળી કનેક્શન બિલ",
+          "આધાર કાર્ડ",
+          "બેંક પાસબુક નકલ"
+        ],
+        docs_en: [
+          "7/12 & 8-A land records",
+          "Power connection bill",
+          "Aadhaar Card",
+          "Bank passbook copy"
+        ],
+        badge_gu: "દિવસ દરમિયાન મફત વીજળી",
+        badge_en: "Daytime Free Solar Power",
+        icon: "☀️"
+      },
+      {
+        id: "pm-kisan-sanman-nidhi",
+        govType: "central",
+        sourceDept: "central",
+        categoryKey: "financial",
+        title_gu: "પીએમ કિસાન સન્માન નિધિ યોજના",
+        title_en: "PM Kisan Samman Nidhi Yojana",
+        dept_gu: "કૃષિ અને ખેડૂત કલ્યાણ મંત્રાલય, ભારત સરકાર",
+        dept_en: "Ministry of Agriculture & Farmers Welfare, Govt of India",
+        benefit_gu: "વાર્ષિક ₹6,000 ની સીધી આર્થિક સહાય (દર 4 મહિને ₹2,000 ના ત્રણ સમાન હપ્તા સીધા બેંક ખાતામાં).",
+        benefit_en: "Direct financial assistance of ₹6,000/year (3 equal installments of ₹2,000 directly to bank accounts).",
+        eligibility_gu: "ખેતીલાયક જમીન ધરાવતા તમામ પાત્ર ખેડૂત પરિવારો. e-KYC અને લેન્ડ સીડિંગ પૂર્ણ હોવું ફરજિયાત.",
+        eligibility_en: "All eligible landholding farmer families. Active e-KYC and land seeding mandatory.",
+        deadline_gu: "કાયમી ખુલ્લું (નવા ખેડૂતો ગમે ત્યારે નોંધણી કરાવી શકે છે)",
+        deadline_en: "Always Open (New farmers can register anytime)",
+        status: "always",
+        portalUrl: "https://pmkisan.gov.in",
+        docs_gu: [
+          "આધાર કાર્ડ (મોબાઇલ લિંક્ડ)",
+          "૭/૧૨ - ૮-અ જમીનની નકલ",
+          "DBT સક્ષમ બેંક ખાતાની વિગત",
+          "રેશન કાર્ડ નકલ"
+        ],
+        docs_en: [
+          "Aadhaar Card (Mobile linked)",
+          "Land record 7/12 and 8-A copy",
+          "DBT-enabled Bank Account details",
+          "Ration Card copy"
+        ],
+        badge_gu: "ભારત સરકારની ફ્લેગશિપ યોજના",
+        badge_en: "Flagship Central Scheme",
+        icon: "💰"
+      },
+      {
+        id: "kisan-credit-card-kcc",
+        govType: "central",
+        sourceDept: "central",
+        categoryKey: "financial",
+        title_gu: "કિસાન ક્રેડિટ કાર્ડ (KCC) સસ્તી લોન યોજના",
+        title_en: "Kisan Credit Card (KCC) Low-Interest Crop Loan",
+        dept_gu: "નાણાં મંત્રાલય અને નાબાર્ડ (NABARD)",
+        dept_en: "Ministry of Finance & NABARD",
+        benefit_gu: "માત્ર 4% ના રાહત દરે ₹3 લાખ સુધીનું પાક ધિરાણ (સમયસર ચૂકવણી પર 3% વ્યાજ માફી). ₹1.60 લાખ સુધી કોઈ જામીન વગર લોન!",
+        benefit_en: "Crop loan up to ₹3 Lakhs at subsidized 4% interest rate (3% prompt repayment rebate). Collateral-free loan up to ₹1.60 Lakhs!",
+        eligibility_gu: "તમામ ખેડૂતો, પશુપાલકો અને મત્સ્યપાલકો.",
+        eligibility_en: "All farmers, animal husbandry and fisheries rearers.",
+        deadline_gu: "કોઈપણ સમયે નજીકની રાષ્ટ્રીયકૃત અથવા સહકારી બેંકમાં અરજી",
+        deadline_en: "Open anytime at nearest bank branch",
+        status: "always",
+        portalUrl: "https://myscheme.gov.in",
+        docs_gu: [
+          "KCC અરજી ફોર્મ",
+          "૭/૧૨ અને ૮-અ જમીન પુરાવા",
+          "આધાર કાર્ડ અને પાન કાર્ડ"
+        ],
+        docs_en: [
+          "KCC application form",
+          "7/12 & 8-A ownership documents",
+          "Aadhaar & PAN Card"
+        ],
+        badge_gu: "માત્ર 4% વ્યાજ દર",
+        badge_en: "Subsidized 4% Interest",
+        icon: "💳"
+      },
+      {
+        id: "soil-health-card",
+        govType: "central",
+        sourceDept: "central",
+        categoryKey: "organic",
+        title_gu: "પ્રધાનમંત્રી સોઇલ હેલ્થ કાર્ડ યોજના",
+        title_en: "Soil Health Card Scheme",
+        dept_gu: "કૃષિ અને ખેડૂત કલ્યાણ મંત્રાલય, ભારત સરકાર",
+        dept_en: "Ministry of Agriculture, Govt of India",
+        benefit_gu: "જમીનની ફળદ્રુપતા અને 12 મહત્વના પોષક તત્ત્વોની મફત ચકાસણી. ખાતરનો બગાડ અટકાવી ખર્ચમાં મોટો ઘટાડો.",
+        benefit_en: "Free testing of 12 critical soil health parameters and tailored fertilizer recommendations to cut farming input costs.",
+        eligibility_gu: "ગુજરાતના તમામ ખેડૂત ભાઈઓ.",
+        eligibility_en: "All active farmers across Gujarat.",
+        deadline_gu: "કાયમી ખુલ્લું (નજીકની કૃષિ વિજ્ઞાન કેન્દ્ર KVK અથવા ગ્રામસેવક પાસે)",
+        deadline_en: "Available year-round via Gram Sevak or nearest KVK",
+        status: "always",
+        portalUrl: "https://soilhealth.dac.gov.in",
+        docs_gu: [
+          "જમીન ખાતા નંબર (૭/૧૨)",
+          "આધાર કાર્ડ",
+          "ખેતરની માટીનો નમૂનો"
+        ],
+        docs_en: [
+          "Land record Khata No. (7/12)",
+          "Aadhaar Card",
+          "Soil sample from farm"
+        ],
+        badge_gu: "તદ્દન મફત માટી પરીક્ષણ",
+        badge_en: "100% Free Soil Testing",
+        icon: "🌱"
+      }
+    ];
+
+    // --- APMC RATES ---
+    const MANDI_DATA = [
+      { yard_gu: "રાજકોટ (Rajkot)", yard_en: "Rajkot Yard", crop_gu: "મગફળી (Groundnut)", crop_en: "Groundnut", min: "₹1,320", max: "₹1,560", trend: "+20" },
+      { yard_gu: "રાજકોટ (Rajkot)", yard_en: "Rajkot Yard", crop_gu: "કપાસ (Cotton)", crop_en: "Cotton", min: "₹1,450", max: "₹1,640", trend: "+15" },
+      { yard_gu: "ગોંડલ (Gondal)", yard_en: "Gondal Yard", crop_gu: "લાલ મરચાં (Chilli)", crop_en: "Dry Chilli", min: "₹2,400", max: "₹3,950", trend: "+50" },
+      { yard_gu: "ઊંઝા (Unjha)", yard_en: "Unjha Yard", crop_gu: "જીરું (Cumin)", crop_en: "Cumin Seed", min: "₹5,100", max: "₹5,850", trend: "+80" },
+      { yard_gu: "ઊંઝા (Unjha)", yard_en: "Unjha Yard", crop_gu: "વરિયાળી (Fennel)", crop_en: "Fennel Seed", min: "₹1,750", max: "₹2,820", trend: "-10" },
+      { yard_gu: "સુરત (Surat)", yard_en: "Surat Yard", crop_gu: "ડાંગર (Paddy)", crop_en: "Paddy", min: "₹390", max: "₹475", trend: "+5" },
+      { yard_gu: "અમરેલી (Amreli)", yard_en: "Amreli Yard", crop_gu: "તલ સફેદ (Sesame)", crop_en: "White Sesame", min: "₹2,350", max: "₹2,880", trend: "+30" }
+    ];
+
+    // --- YD LOGO COMPONENT ---
+    function YDLogo({ size = "w-12 h-12" }) {
+      return (
+        <div className={`${size} rounded-2xl bg-gradient-to-br from-green-800 via-emerald-800 to-green-900 border-2 border-amber-400 shadow-md p-1 flex items-center justify-center flex-shrink-0 group hover:scale-105 transition-transform`}>
+          <svg viewBox="0 0 100 100" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="50" r="46" stroke="#facc15" strokeWidth="3" strokeDasharray="3 2" />
+            <path d="M50 12 Q52 6 58 8 Q54 12 50 12" fill="#facc15" />
+            <path d="M44 16 Q40 10 46 8 Q46 14 44 16" fill="#facc15" />
+            <path d="M28 28 L42 50 L42 72 M56 28 L42 50" stroke="#fef08a" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M56 28 L56 72 C70 72 76 62 76 50 C76 38 70 28 56 28 Z" stroke="#ffffff" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="50" cy="50" r="3" fill="#facc15" />
+          </svg>
+        </div>
+      );
+    }
+
+    // --- AUTH MODAL ---
+    const SERVICES_LIST = [
+    "Tractor", "Harvester", "Rotavator", "Cultivator", "Seed Drill", 
+    "Tractor Trolley", "Water Tanker", "Agricultural Transport", 
+    "Goods/Farm Transport", "Sprayer", "Thresher", "Other Farming Equipment", "Other Vehicle Services"
+];
+
+const VILLAGES_DB = {
+    "gondal": { lat: 21.9619, lon: 70.7923 },
+    "jetpur": { lat: 21.7551, lon: 70.6219 },
+    "rajkot": { lat: 22.3039, lon: 70.8022 },
+    "buri": { lat: 22.0, lon: 70.7 },
+    "navagam": { lat: 21.98, lon: 70.75 },
+    "kalyanpur": { lat: 22.1, lon: 70.65 },
+    "morbi": { lat: 22.812, lon: 70.832 },
+    "surat": { lat: 21.1702, lon: 72.8311 },
+    "ahmedabad": { lat: 23.0225, lon: 72.5714 },
+    "vadodara": { lat: 22.3072, lon: 73.1812 }
+};
+
+function normalizeVillageName(name) {
+    return name ? name.trim().toLowerCase().replace(/[^a-z]/g, '') : '';
+}
+
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return parseFloat((R * c).toFixed(1));
+}
+
+// --- AUTH MODAL ---
+
+export default function Home() {
+  const { user } = React.useContext(AuthContext);
+  const navigate = useNavigate();
+      
+      const [lang, setLang] = useState("gu");
+      const [searchTerm, setSearchTerm] = useState("");
+      const [selectedGovt, setSelectedGovt] = useState("all");
+      const [selectedCategory, setSelectedCategory] = useState("all");
+      const [selectedScheme, setSelectedScheme] = useState(null);
+      const [checkedDocs, setCheckedDocs] = useState({});
+
+      // Live Mandi Bhav State
+      const [mandiRates, setMandiRates] = useState([]);
+      const [mandiDate, setMandiDate] = useState('');
+      const [loadingMandi, setLoadingMandi] = useState(false);
+
+      const fetchLiveMandi = async () => {
+        setLoadingMandi(true);
+        try {
+          const res = await api.get('/mandi/live');
+          if (res.data.success) {
+            setMandiRates(res.data.rates || []);
+            setMandiDate(res.data.marketDateGujarati);
+          }
+        } catch (e) {
+          console.error('Failed to load mandi rates:', e);
+        } finally {
+          setLoadingMandi(false);
+        }
+      };
+
+      useEffect(() => {
+        fetchLiveMandi();
+      }, []);
+
+      // Light / Dark mode state
+      const [theme, setTheme] = useState(() => {
+        try {
+          return localStorage.getItem("khedut_theme") || "light";
+        } catch {
+          return "light";
+        }
+      });
+      const isDark = theme === "dark";
+
+      const toggleTheme = () => {
+        const next = isDark ? "light" : "dark";
+        setTheme(next);
+        localStorage.setItem("khedut_theme", next);
+      };
+
+      
+      
+      
+
+      const [quizLand, setQuizLand] = useState("");
+      const [quizInterest, setQuizInterest] = useState("");
+      const [quizResultCount, setQuizResultCount] = useState(null);
+
+      const t = i18n[lang];
+
+      const toggleLanguage = () => {
+        setLang(prev => (prev === "gu" ? "en" : "gu"));
+      };
+
+      const handleLoginSuccess = (userData) => {
+        setUser(userData);
+        
+      };
+
+      const handleLogout = () => {
+        localStorage.removeItem("khedut_user");
+        setUser(null);
+        navigate('/login');
+      };
+
+      const filteredSchemes = useMemo(() => {
+        return SCHEMES_DATA.filter(scheme => {
+          if (selectedGovt !== "all" && scheme.govType !== selectedGovt) {
+            return false;
+          }
+          if (selectedCategory !== "all" && scheme.categoryKey !== selectedCategory) {
+            return false;
+          }
+          if (searchTerm.trim() !== "") {
+            const query = searchTerm.toLowerCase();
+            const titleGu = scheme.title_gu.toLowerCase();
+            const titleEn = scheme.title_en.toLowerCase();
+            const benefitGu = scheme.benefit_gu.toLowerCase();
+            const benefitEn = scheme.benefit_en.toLowerCase();
+            return (
+              titleGu.includes(query) ||
+              titleEn.includes(query) ||
+              benefitGu.includes(query) ||
+              benefitEn.includes(query)
+            );
+          }
+          return true;
+        });
+      }, [selectedGovt, selectedCategory, searchTerm]);
+
+      const handleShareWhatsapp = (scheme) => {
+        const title = lang === "gu" ? scheme.title_gu : scheme.title_en;
+        const benefit = lang === "gu" ? scheme.benefit_gu : scheme.benefit_en;
+        const text = `🌾 *${title}*\n\n✅ લાભ: ${benefit}\n\n🔗 સત્તાવાર પોર્ટલ: ${scheme.portalUrl}\n\nCourtesy: Yash Dadhaniya (Village: Buri) - Gujarat Khedut Sahay.`;
+        const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+        window.open(url, "_blank");
+      };
+
+      const handleDocCheck = (schemeId, docIndex) => {
+        const key = `${schemeId}-${docIndex}`;
+        setCheckedDocs(prev => ({ ...prev, [key]: !prev[key] }));
+      };
+
+      const handleRunQuiz = () => {
+        if (!quizInterest && !quizLand) return;
+        if (quizInterest) {
+          setSelectedCategory(quizInterest);
+        }
+        const matched = SCHEMES_DATA.filter(s => {
+          if (quizInterest && quizInterest !== "all") {
+            return s.categoryKey === quizInterest;
+          }
+          return true;
+        });
+        setQuizResultCount(matched.length);
+        const el = document.getElementById("schemes-section");
+        if (el) el.scrollIntoView({ behavior: "smooth" });
+      };
+
+      const resetAllFilters = () => {
+        setSearchTerm("");
+        setSelectedGovt("all");
+        setSelectedCategory("all");
+        setQuizLand("");
+        setQuizInterest("");
+        setQuizResultCount(null);
+      };
+
+      return (
+        <div className={`min-h-screen flex flex-col font-sans transition-colors duration-200 ${
+          isDark ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-800'
+        }`}>
+          
+          
+
+          {/* TOP NOTICE WITH ENGLISH FOUNDER NAME & THEME BUTTON */}
+          <div className="bg-gradient-to-r from-emerald-900 via-green-800 to-emerald-900 text-white text-xs sm:text-sm py-2 px-4 shadow-sm border-b border-green-800">
+            <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+                <span className="font-medium">{t.officialBadge}</span>
+                <span className="hidden md:inline-block text-amber-300 font-bold">
+                  • Founder: Yash Dadhaniya (Village: Buri)
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3 text-xs">
+                <a href="tel:18001801551" className="hidden lg:inline hover:underline text-amber-200 transition" title="Call Toll Free">📞 {t.kisanCallCenter}: <b>1800-180-1551</b></a>
+                
+                {/* LIGHT / DARK MODE TOGGLE */}
+                <button
+                  onClick={toggleTheme}
+                  className="bg-white/15 hover:bg-white/25 text-white font-semibold px-2.5 py-1 rounded-full border border-white/30 transition flex items-center gap-1.5"
+                  title="થીમ બદલો / Switch Theme"
+                >
+                  <span>{isDark ? '☀️' : '🌙'}</span>
+                  <span>{isDark ? (lang === 'gu' ? 'લાઇટ' : 'Light') : (lang === 'gu' ? 'ડાર્ક' : 'Dark')}</span>
+                </button>
+
+                {/* LANGUAGE TOGGLE */}
+                <button 
+                  onClick={toggleLanguage}
+                  className="bg-white/15 hover:bg-white/25 text-white font-semibold px-3 py-1 rounded-full border border-white/30 transition flex items-center gap-1.5"
+                >
+                  🌐 <span>{t.switchLang}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* NAVBAR */}
+          <header className={`sticky top-0 z-40 backdrop-blur border-b transition-colors ${
+            isDark ? 'bg-slate-900/95 border-slate-800 text-white' : 'bg-white/95 border-slate-200 text-slate-900'
+          }`}>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
+              
+              <div className="flex items-center gap-3">
+                <YDLogo size="w-12 h-12" />
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-lg sm:text-2xl font-black tracking-tight leading-tight">
+                      {t.portalName}
+                    </h1>
+                    <span className="text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full border border-amber-300 hidden sm:inline-block">
+                      YD
+                    </span>
+                  </div>
+                  <p className={`text-[11px] sm:text-xs font-semibold ${isDark ? 'text-amber-300/90' : 'text-emerald-700'}`}>
+                    Founder: Yash Dadhaniya (Village: Buri)
+                  </p>
+                </div>
+              </div>
+
+              {/* USER PROFILE */}
+              <div className="flex items-center gap-2 sm:gap-3">
+                {user ? (
+                  <div className={`flex items-center gap-2 py-1.5 px-3 rounded-2xl border ${
+                    isDark ? 'bg-slate-800 border-slate-700' : 'bg-green-50 border-green-200'
+                  }`}>
+                    <div className="w-8 h-8 rounded-full bg-green-600 text-white font-bold text-xs flex items-center justify-center shadow-xs">
+                      {user.name ? user.name.charAt(0).toUpperCase() : "👤"}
+                    </div>
+                    <div className="hidden sm:block text-left">
+                      <div className={`text-xs font-bold leading-tight ${isDark ? 'text-white' : 'text-slate-800'}`}>
+                        {user.name}
+                      </div>
+                      <div className="text-[10px] text-green-500 font-medium">
+                        {user.mobile}
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      title="Logout"
+                      className="ml-1 text-[11px] font-semibold text-red-500 hover:text-red-700 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 px-2 py-1 rounded-lg transition"
+                    >
+                      {lang === "gu" ? "બહાર નીકળો" : "Logout"}
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => navigate('/login')}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700 shadow-sm transition"
+                  >
+                    🔐 <span>{lang === "gu" ? "ખાતું / સાઇન ઇન" : "Sign In"}</span>
+                  </button>
+                )}
+
+                <a 
+                  href="#calculator" 
+                  className={`hidden lg:inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl transition ${
+                    isDark ? 'bg-slate-800 hover:bg-slate-700 text-slate-200' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                  }`}
+                >
+                  🧮 {t.calculatorTitle}
+                </a>
+              </div>
+
+            </div>
+          </header>
+
+          {/* USER WELCOME STRIP */}
+          {user && (
+            <div className={`py-2 px-4 text-center text-xs font-semibold flex items-center justify-center gap-2 border-b ${
+              isDark ? 'bg-emerald-950/40 border-emerald-800 text-emerald-300' : 'bg-emerald-50 border-emerald-200 text-emerald-900'
+            }`}>
+              <span>👋</span>
+              <span>
+                {lang === "gu"
+                  ? `નમસ્તે, ${user.name}! (મો. ${user.mobile}) - ગુજરાત ખેડૂત સહાય પોર્ટલ પર તમારું સ્વાગત છે.`
+                  : `Welcome, ${user.name}! (Mob: ${user.mobile}) to Gujarat Khedut Sahay Portal.`}
+              </span>
+            </div>
+          )}
+          
+            <>
+          
+
+          {/* DYNAMIC LIVE MANDI TICKER & APMC RATES */}
+          <section className={`border-b py-3 px-4 overflow-hidden transition-colors ${
+            isDark ? 'bg-amber-950/40 border-amber-800/60' : 'bg-amber-50 border-amber-200/80'
+          }`}>
+            <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-2.5">
+              <div className="flex items-center gap-2">
+                <span className="flex-shrink-0 flex items-center gap-1.5 bg-amber-600 text-white text-xs font-black px-2.5 py-1 rounded shadow-sm">
+                  <span className="w-2 h-2 rounded-full bg-red-400 animate-ping"></span>
+                  {lang === "gu" ? "🔴 લાઈવ આજના બજાર ભાવ" : "🔴 Live APMC Mandi Rates"}
+                </span>
+                {mandiDate && (
+                  <span className="text-xs text-amber-900 dark:text-amber-200 font-bold">
+                    📅 {mandiDate} (પ્રતિ ૨૦ કિલો / મણ)
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={fetchLiveMandi}
+                disabled={loadingMandi}
+                className="text-xs bg-white dark:bg-slate-800 text-amber-900 dark:text-amber-200 border border-amber-300 px-2.5 py-1 rounded-xl font-bold hover:bg-amber-100 transition shadow-2xs flex items-center gap-1 cursor-pointer"
+              >
+                <span>🔄</span> {loadingMandi ? "અપડેટ..." : (lang === "gu" ? "તાજા ભાવ રીફ્રેશ" : "Refresh Rates")}
+              </button>
+            </div>
+
+            <div className="max-w-7xl mx-auto overflow-x-auto custom-scrollbar flex items-center gap-3 text-xs font-medium whitespace-nowrap pb-1">
+              {(mandiRates.length > 0 ? mandiRates : MANDI_DATA).map((item, idx) => (
+                <div key={idx} className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border shadow-2xs ${
+                  isDark ? 'bg-slate-800 border-amber-900/50 text-slate-200' : 'bg-white border-amber-200/80 text-slate-700'
+                }`}>
+                  <span className={`font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                    {lang === "gu" ? (item.yard_gu || item.yard) : (item.yard_en || item.yard)}:
+                  </span>
+                  <span className={isDark ? 'text-slate-300' : 'text-slate-600'}>
+                    {lang === "gu" ? (item.crop_gu || item.crop) : (item.crop_en || item.crop)}
+                  </span>
+                  <span className="font-black text-emerald-600 dark:text-emerald-400">
+                    {item.max}
+                  </span>
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                    item.isPositive !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                  }`}>
+                    {item.trend}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </section>
+          {/* VEHICLE & RENTAL SERVICE HIGHLIGHT BANNER */}
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 py-4 w-full">
+            <div className="bg-gradient-to-r from-green-600 to-emerald-800 rounded-3xl p-6 shadow-xl text-white flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none"></div>
+              <div className="relative z-10 flex-1">
+                <h2 className="text-2xl sm:text-3xl font-black mb-2 flex items-center gap-2">
+                  🚜 {lang === "gu" 
+                    ? ((user?.role === 'serviceProvider' || user?.role === 'provider') ? "તમારી સેવાઓ અને ડેશબોર્ડ મેનેજ કરો" : "ટ્રેક્ટર, હાર્વેસ્ટર અને કૃષિ સાધનો શોધો!") 
+                    : ((user?.role === 'serviceProvider' || user?.role === 'provider') ? "Manage Your Services & Dashboard" : "Find Tractors, Harvesters & Agricultural Services")}
+                </h2>
+                <p className="text-emerald-100 font-medium text-sm sm:text-base max-w-2xl">
+                  {lang === "gu" 
+                    ? ((user?.role === 'serviceProvider' || user?.role === 'provider') 
+                        ? "તમારા ડેશબોર્ડ પરથી તમારી સેવાઓનું સંચાલન કરો અને ખેડૂતોની વિનંતીઓ (Requests) સ્વીકારો." 
+                        : "તમારા ગામની આસપાસના વિસ્તારમાં ઉપલબ્ધ ટ્રેક્ટર, હાર્વેસ્ટર, રોટાવેટર શોધો અને લાઈવ મેપ પર જુઓ.")
+                    : ((user?.role === 'serviceProvider' || user?.role === 'provider') 
+                        ? "Manage your service listings and incoming booking requests from nearby farmers." 
+                        : "Search nearby tractors, harvesters, cultivators within your radius with live GPS mapping.")}
+                </p>
+              </div>
+              <div className="relative z-10 w-full md:w-auto flex flex-col sm:flex-row gap-3">
+                <button 
+                  onClick={() => navigate((user?.role === 'serviceProvider' || user?.role === 'provider') ? '/provider-dashboard' : '/search-services')}
+                  className="w-full md:w-auto bg-white text-green-700 hover:bg-green-50 font-black text-base sm:text-lg px-8 py-3.5 rounded-2xl shadow-lg transition-transform transform hover:scale-105 text-center cursor-pointer"
+                >
+                  {lang === "gu" 
+                    ? ((user?.role === 'serviceProvider' || user?.role === 'provider') ? "ડેશબોર્ડ ખોલો ➔" : "સેવાઓ શોધો (Live Map) ➔") 
+                    : ((user?.role === 'serviceProvider' || user?.role === 'provider') ? "Open Dashboard ➔" : "Find Services (Live Map) ➔")}
+                </button>
+              </div>
+            </div>
+          </section>
+
+
+          {/* HERO BANNER */}
+          <section className={`relative py-10 sm:py-14 border-b transition-colors ${
+            isDark ? 'bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 border-slate-800' : 'bg-gradient-to-b from-green-50 via-white to-slate-50 border-slate-200'
+          }`}>
+            <div className="max-w-4xl mx-auto px-4 text-center">
+              <div className="inline-flex items-center gap-2 bg-green-100 dark:bg-green-950/60 text-green-800 dark:text-green-300 text-xs font-semibold px-3.5 py-1.5 rounded-full border border-green-300 dark:border-green-800 mb-4">
+                <span>i-Khedut • GAIC • કૃષિ વિભાગ • કેન્દ્ર સરકાર સબસિડી</span>
+              </div>
+              
+              <h2 className={`text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight leading-snug ${
+                isDark ? 'text-white' : 'text-slate-900'
+              }`}>
+                {lang === "gu" ? (
+                  <>ખેડૂત મિત્રો માટે <span className="text-green-500">તમામ સરકારી યોજનાઓ</span> એક જ પોર્ટલ પર</>
+                ) : (
+                  <>All <span className="text-green-500">Government Schemes & Subsidies</span> for Gujarat Farmers</>
+                )}
+              </h2>
+              
+              <p className={`mt-3 text-sm sm:text-base max-w-2xl mx-auto ${
+                isDark ? 'text-slate-300' : 'text-slate-600'
+              }`}>
+                {lang === "gu" 
+                  ? "ગુજરાત સરકાર (i-Khedut, GAIC, GGRC, કૃષિ વિભાગ) અને ભારત સરકાર (PM-KISAN, PMFBY) ની અધિકૃત માહિતી, પાત્રતા અને સીધી અરજી કરવાની લિંક."
+                  : "Verified official information from i-Khedut, GAIC, GGRC, Gujarat Agri Department and PM-Kisan with direct apply links."
+                }
+              </p>
+
+              {/* SEARCH */}
+              <div className="mt-8 max-w-2xl mx-auto">
+                <div className={`relative flex items-center shadow-lg rounded-2xl border-2 focus-within:border-green-500 overflow-hidden transition ${
+                  isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-green-500/50'
+                }`}>
+                  <span className="pl-4 text-xl text-slate-400">🔍</span>
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder={t.searchPlaceholder}
+                    className={`w-full py-3.5 sm:py-4 px-3 placeholder-slate-400 focus:outline-none text-sm sm:text-base font-medium ${
+                      isDark ? 'bg-slate-800 text-white' : 'bg-white text-slate-800'
+                    }`}
+                  />
+                  {searchTerm && (
+                    <button 
+                      onClick={() => setSearchTerm("")}
+                      className="mr-2 text-xs bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2.5 py-1.5 rounded-lg"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+
+                <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5 text-xs text-slate-400">
+                  <span className="font-semibold">{lang === "gu" ? "લોકપ્રિય શોધો:" : "Popular:"}</span>
+                  {["ટ્રેક્ટર (Tractor)", "GAIC કોલ્ડ સ્ટોરેજ", "બાગાયત ગ્રીનહાઉસ", "PM-Kisan", "કડબ કટર (Chaff Cutter)", "ટપક સિંચાઈ (Drip)"].map((tag, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setSearchTerm(tag.split(" ")[0])}
+                      className={`px-2.5 py-1 rounded-full border transition ${
+                        isDark ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700' : 'bg-white hover:bg-green-100 text-slate-700 border-slate-200'
+                      }`}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* STATS */}
+              <div className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl mx-auto text-left">
+                <div className={`p-3.5 rounded-xl border shadow-xs ${
+                  isDark ? 'bg-slate-800/80 border-slate-700' : 'bg-white border-slate-200'
+                }`}>
+                  <div className="text-2xl font-black text-green-500">૧૨+</div>
+                  <div className="text-xs text-slate-400 font-medium">{lang === "gu" ? "સત્તાવાર યોજનાઓ" : "Official Schemes"}</div>
+                </div>
+                <div className={`p-3.5 rounded-xl border shadow-xs ${
+                  isDark ? 'bg-slate-800/80 border-slate-700' : 'bg-white border-slate-200'
+                }`}>
+                  <div className="text-2xl font-black text-amber-500">૩૫%</div>
+                  <div className="text-xs text-slate-400 font-medium">{lang === "gu" ? "GAIC કોલ્ડ સ્ટોરેજ સબસિડી" : "GAIC Cold Chain Subsidy"}</div>
+                </div>
+                <div className={`p-3.5 rounded-xl border shadow-xs ${
+                  isDark ? 'bg-slate-800/80 border-slate-700' : 'bg-white border-slate-200'
+                }`}>
+                  <div className="text-2xl font-black text-emerald-500">૮૫%</div>
+                  <div className="text-xs text-slate-400 font-medium">{lang === "gu" ? "ટપક સિંચાઈ સબસિડી" : "Drip Subsidy"}</div>
+                </div>
+                <div className={`p-3.5 rounded-xl border shadow-xs ${
+                  isDark ? 'bg-slate-800/80 border-slate-700' : 'bg-white border-slate-200'
+                }`}>
+                  <div className="text-2xl font-black text-blue-500">૦%</div>
+                  <div className="text-xs text-slate-400 font-medium">{lang === "gu" ? "MKSY પાક સહાય પ્રીમિયમ" : "MKSY Zero Premium"}</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* CREATOR CARD: Yash Dadhaniya (Village: Buri) IN ENGLISH */}
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 py-6 w-full">
+            <div className={`rounded-3xl p-6 sm:p-8 border-2 transition-all relative overflow-hidden shadow-sm ${
+              isDark ? 'bg-gradient-to-r from-emerald-950/40 via-slate-800/80 to-green-950/40 border-amber-500/50' : 'bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-green-500/10 border-amber-300'
+            }`}>
+              <div className="flex flex-col md:flex-row items-center gap-6 relative z-10">
+                <div className="flex-shrink-0 flex flex-col items-center">
+                  <YDLogo size="w-24 h-24 sm:w-28 sm:h-28" />
+                  <span className="mt-2 text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 px-2.5 py-0.5 rounded-full border border-amber-300">
+                    YD BRAND LOGO
+                  </span>
+                </div>
+
+                <div className="text-center md:text-left flex-1">
+                  <div className="inline-flex items-center gap-1.5 bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300 text-xs font-bold px-3 py-1 rounded-full border border-green-300 dark:border-green-700 mb-2">
+                    <span>🌾</span>
+                    <span>Portal Founder & Creator</span>
+                  </div>
+
+                  <h3 className={`text-2xl sm:text-3xl font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                    Yash Dadhaniya
+                  </h3>
+
+                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mt-1.5 text-xs sm:text-sm font-semibold">
+                    <span className={`flex items-center gap-1 px-3 py-1 rounded-lg border shadow-2xs ${
+                      isDark ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-white border-slate-200 text-slate-800'
+                    }`}>
+                      🏡 Village: Buri
+                    </span>
+                    <span className={`flex items-center gap-1 px-3 py-1 rounded-lg border shadow-2xs text-green-600 dark:text-green-400 ${
+                      isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'
+                    }`}>
+                      📍 Gujarat, India
+                    </span>
+                  </div>
+
+                  <p className={`mt-3 text-xs sm:text-sm leading-relaxed max-w-2xl ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                    This dedicated portal is created and conceptualized by <b>Yash Dadhaniya (Village: Buri)</b> to ensure every farmer across Gujarat can seamlessly access state subsidies (i-Khedut, GAIC, GGRC, Agri Dept) and Central Government schemes with full transparency and zero middlemen.
+                  </p>
+                </div>
+
+                <div className={`flex-shrink-0 p-4 rounded-2xl border shadow-xs text-center min-w-[150px] ${
+                  isDark ? 'bg-slate-800/90 border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'
+                }`}>
+                  <div className="text-xs text-slate-400 font-semibold">Farmer Service Mission</div>
+                  <div className="text-lg font-black text-green-600 dark:text-green-400 mt-1">100% Free</div>
+                  <div className="text-[10px] text-slate-400 mt-0.5">Direct Govt Subsidies</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* OFFICIAL GUJARAT GOVT PORTALS: i-Khedut, GAIC, Agri Dept */}
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 py-6 w-full">
+            <div className="text-center max-w-3xl mx-auto mb-6">
+              <span className="text-xs font-bold uppercase tracking-wider text-green-600 bg-green-50 dark:bg-green-950/60 dark:text-green-400 px-3 py-1 rounded-full border border-green-200 dark:border-green-800">
+                🏛️ સત્તાવાર સરકારી પોર્ટલ્સ / Official Portals
+              </span>
+              <h3 className={`text-xl sm:text-2xl font-extrabold mt-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                {lang === 'gu' ? 'ગુજરાત સરકારની અધિકૃત કૃષિ વેબસાઇટ્સ' : 'Official Gujarat Agriculture Portals'}
+              </h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              {[
+                {
+                  title: "i-Khedut Portal (ikhedut.gujarat.gov.in)",
+                  url: "https://ikhedut.gujarat.gov.in",
+                  desc: "ટ્રેક્ટર, ઓજારો, બાગાયત, ટપક સિંચાઈ, પશુપાલન અને ખેતી સહાય માટેનું મુખ્ય પોર્ટલ.",
+                  tag: "i-Khedut",
+                  badgeColor: "bg-emerald-500",
+                  icon: "🌾"
+                },
+                {
+                  title: "GAIC Agro Industries (gaic.gujarat.gov.in)",
+                  url: "https://gaic.gujarat.gov.in",
+                  desc: "કોલ્ડ સ્ટોરેજ, એગ્રો ફૂડ પ્રોસેસિંગ યુનિટ્સ, FPO સંગઠન અને કૃષિ સાધનોના ટેસ્ટીંગ સહાય.",
+                  tag: "GAIC Agro",
+                  badgeColor: "bg-amber-500",
+                  icon: "🏭"
+                },
+                {
+                  title: "Department of Agriculture (agri.gujarat.gov.in)",
+                  url: "https://agri.gujarat.gov.in",
+                  desc: "કૃષિ, ખેડૂત કલ્યાણ અને સહકાર વિભાગ - રાજ્યની અધિકૃત કૃષિ નીતિઓ અને MKSY રાહત.",
+                  tag: "Agri Dept",
+                  badgeColor: "bg-blue-500",
+                  icon: "🏛️"
+                }
+              ].map((p, idx) => (
+                <div
+                  key={idx}
+                  className={`rounded-2xl p-5 border transition-all hover:shadow-lg flex flex-col justify-between ${
+                    isDark ? 'bg-slate-800/90 border-slate-700 hover:border-green-500 text-white' : 'bg-white border-slate-200 hover:border-green-500 text-slate-900'
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-3xl p-2 rounded-xl bg-green-50 dark:bg-slate-700/60 border border-green-200 dark:border-slate-600">
+                        {p.icon}
+                      </span>
+                      <span className={`text-[10px] font-bold text-white px-2 py-0.5 rounded-full ${p.badgeColor}`}>
+                        {p.tag}
+                      </span>
+                    </div>
+                    <h4 className="text-base font-bold leading-snug">{p.title}</h4>
+                    <p className={`text-xs mt-2 leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{p.desc}</p>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700/80">
+                    <a
+                      href={p.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold bg-green-600 hover:bg-green-700 text-white transition shadow-xs"
+                    >
+                      <span>સત્તાવાર સાઇટ ખોલો ➔</span>
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* 4-STEP HOW TO APPLY GUIDE */}
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 py-6 w-full">
+            <div className={`rounded-3xl p-6 sm:p-10 border shadow-xs ${
+              isDark ? 'bg-slate-800/80 border-slate-700' : 'bg-white border-slate-200'
+            }`}>
+              <div className="text-center max-w-2xl mx-auto mb-8">
+                <span className="text-xs font-bold uppercase tracking-wider text-green-600 bg-green-50 dark:bg-green-950/60 dark:text-green-400 px-3 py-1 rounded-full border border-green-200 dark:border-green-800">
+                  📝 અરજી માર્ગદર્શન / Step-by-Step
+                </span>
+                <h3 className={`text-xl sm:text-2xl font-extrabold mt-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  {lang === 'gu' ? 'i-Khedut અને GAIC પર અરજી કરવાની સરળ રીત' : 'How to Apply on i-Khedut & GAIC Portals'}
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  { step: "01", title: "યોજના પસંદ કરો", desc: "પોર્ટલ પર તમારી જરૂરિયાત મુજબની યોજના (ટ્રેક્ટર, પાઇપલાઇન, ગ્રીનહાઉસ કે GAIC) પસંદ કરો.", icon: "🔍" },
+                  { step: "02", title: "દસ્તાવેજો તૈયાર રાખો", desc: "જમીનના ૭/૧૨ - ૮-અ ઉતારા, આધાર કાર્ડ, બેંક પાસબુક અને ડીલર ક્વોટેશન સાથે રાખો.", icon: "📑" },
+                  { step: "03", title: "ઓનલાઇન અરજી સબમિટ કરો", desc: "i-Khedut અથવા GAIC પર ફોર્મ ભરી પ્રિન્ટ મેળવી સાચવી રાખો.", icon: "💻" },
+                  { step: "04", title: "મંજૂરી અને સબસિડી જમા", desc: "અધિકારીની ચકાસણી બાદ સહાય સીધી તમારા બેંક ખાતામાં (DBT) જમા થશે.", icon: "💰" }
+                ].map((s, idx) => (
+                  <div
+                    key={idx}
+                    className={`p-4 rounded-2xl border relative flex flex-col justify-between ${
+                      isDark ? 'bg-slate-900/60 border-slate-700' : 'bg-slate-50 border-slate-200'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-2xl">{s.icon}</span>
+                        <span className="text-xs font-black text-green-500 bg-green-100 dark:bg-green-900/50 px-2 py-0.5 rounded-md">
+                          STEP {s.step}
+                        </span>
+                      </div>
+                      <h4 className={`text-sm font-bold mt-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>{s.title}</h4>
+                      <p className={`text-xs mt-1 leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{s.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* SCHEMES EXPLORER */}
+          <section id="schemes-section" className="max-w-7xl mx-auto px-4 sm:px-6 py-6 w-full flex-1">
+            <div className={`rounded-2xl p-5 border shadow-xs mb-8 transition-colors ${
+              isDark ? 'bg-slate-800/90 border-slate-700' : 'bg-white border-slate-200'
+            }`}>
+              <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b ${
+                isDark ? 'border-slate-700' : 'border-slate-100'
+              }`}>
+                <div>
+                  <h3 className={`text-base sm:text-lg font-bold flex items-center gap-2 ${
+                    isDark ? 'text-white' : 'text-slate-900'
+                  }`}>
+                    <span>📑</span> {t.filterHeading}
+                  </h3>
+                  <p className="text-xs text-slate-400">{filteredSchemes.length} {t.schemesFound}</p>
+                </div>
+
+                <div className={`flex items-center p-1 rounded-xl gap-1 self-start md:self-auto ${
+                  isDark ? 'bg-slate-900' : 'bg-slate-100'
+                }`}>
+                  {["all", "gujarat", "central"].map((gov) => (
+                    <button
+                      key={gov}
+                      onClick={() => setSelectedGovt(gov)}
+                      className={`text-xs font-semibold px-3 py-2 rounded-lg transition ${
+                        selectedGovt === gov
+                          ? (isDark ? 'bg-slate-700 text-white shadow-xs' : 'bg-white text-green-800 shadow-xs')
+                          : (isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900')
+                      }`}
+                    >
+                      {gov === "all" ? t.allGovt : gov === "gujarat" ? `🏛️ ${t.gujaratGovt}` : `🇮🇳 ${t.centralGovt}`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-4">
+                <div className="text-xs font-semibold text-slate-400 mb-2">કેટેગરી પસંદ કરો / Category:</div>
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(t.categories).map(([key, label]) => {
+                    const isActive = selectedCategory === key;
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => setSelectedCategory(key)}
+                        className={`text-xs font-medium px-3 py-1.5 rounded-lg border transition ${
+                          isActive
+                            ? 'bg-green-600 text-white border-green-600 shadow-sm'
+                            : isDark
+                              ? 'bg-slate-900/60 hover:bg-slate-700 text-slate-300 border-slate-700'
+                              : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {(selectedGovt !== "all" || selectedCategory !== "all" || searchTerm) && (
+                <div className={`mt-4 pt-3 border-t flex items-center justify-between text-xs ${
+                  isDark ? 'border-slate-700 text-slate-400' : 'border-slate-100 text-slate-500'
+                }`}>
+                  <span>ફિલ્ટર સક્રિય છે</span>
+                  <button onClick={resetAllFilters} className="text-green-500 hover:text-green-400 font-semibold underline">
+                    {t.resetFilters}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {filteredSchemes.length === 0 ? (
+              <div className={`rounded-2xl p-12 text-center border ${
+                isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+              }`}>
+                <div className="text-4xl mb-3">🔍</div>
+                <h4 className="text-lg font-bold">કોઈ યોજના મળી નથી / No schemes match</h4>
+                <p className="text-xs text-slate-400 mt-1">કૃપા કરીને અલગ કીવર્ડ શોધો અથવા ફિલ્ટર બદલો.</p>
+                <button onClick={resetAllFilters} className="mt-4 text-xs font-semibold bg-green-600 text-white px-4 py-2 rounded-lg">
+                  {t.resetFilters}
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredSchemes.map((scheme) => (
+                  <div
+                    key={scheme.id}
+                    className={`rounded-2xl border transition-all flex flex-col justify-between overflow-hidden group ${
+                      isDark 
+                        ? 'bg-slate-800/90 border-slate-700 hover:border-green-500 hover:shadow-lg' 
+                        : 'bg-white border-slate-200 hover:border-green-400 hover:shadow-md'
+                    }`}
+                  >
+                    <div>
+                      <div className="p-5 pb-3">
+                        <div className="flex items-start justify-between gap-2 mb-2.5">
+                          <span className={`text-3xl p-2 rounded-xl border group-hover:scale-110 transition-transform ${
+                            isDark ? 'bg-slate-900 border-slate-700' : 'bg-green-50 border-green-100'
+                          }`}>
+                            {scheme.icon}
+                          </span>
+                          <div className="flex flex-col items-end gap-1">
+                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${
+                              scheme.sourceDept === "gaic"
+                                ? "bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border-amber-300 dark:border-amber-700"
+                                : scheme.govType === "gujarat"
+                                  ? "bg-green-50 dark:bg-green-950/60 text-green-900 dark:text-green-300 border-green-300 dark:border-green-800"
+                                  : "bg-blue-50 dark:bg-blue-950/60 text-blue-900 dark:text-blue-300 border-blue-300 dark:border-blue-800"
+                            }`}>
+                              {scheme.sourceDept === "gaic" ? "GAIC" : scheme.sourceDept === "ikhedut" ? "i-Khedut" : scheme.sourceDept === "agri_dept" ? "Agri Dept" : "Central"}
+                            </span>
+                            {scheme.badge_gu && (
+                              <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded">
+                                {lang === "gu" ? scheme.badge_gu : scheme.badge_en}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <h4 className={`text-base sm:text-lg font-bold group-hover:text-green-500 transition leading-snug ${
+                          isDark ? 'text-white' : 'text-slate-900'
+                        }`}>
+                          {lang === "gu" ? scheme.title_gu : scheme.title_en}
+                        </h4>
+                        
+                        <p className={`text-xs mt-1 font-medium line-clamp-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                          {lang === "gu" ? scheme.dept_gu : scheme.dept_en}
+                        </p>
+                      </div>
+
+                      <div className={`px-5 py-3 border-y ${
+                        isDark ? 'bg-slate-900/60 border-slate-700/80 text-emerald-400' : 'bg-green-50/60 border-green-100 text-green-800'
+                      }`}>
+                        <div className="text-[11px] font-bold uppercase tracking-wide">
+                          {t.benefits}:
+                        </div>
+                        <p className={`text-xs font-semibold mt-0.5 leading-relaxed ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+                          {lang === "gu" ? scheme.benefit_gu : scheme.benefit_en}
+                        </p>
+                      </div>
+
+                      <div className={`p-5 pt-3 space-y-2 text-xs ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                        <div>
+                          <span className={`font-semibold ${isDark ? 'text-white' : 'text-slate-800'}`}>{t.eligibility}: </span>
+                          <span className="line-clamp-2">{lang === "gu" ? scheme.eligibility_gu : scheme.eligibility_en}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-slate-400">
+                          <span>⏱️ {t.deadline}:</span>
+                          <span className={`font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                            {lang === "gu" ? scheme.deadline_gu : scheme.deadline_en}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-5 pt-0">
+                      <div className={`grid grid-cols-2 gap-2 pt-3 border-t ${isDark ? 'border-slate-700' : 'border-slate-100'}`}>
+                        <button
+                          onClick={() => setSelectedScheme(scheme)}
+                          className={`w-full text-xs font-semibold py-2 px-2.5 rounded-xl transition text-center ${
+                            isDark ? 'bg-slate-700 hover:bg-slate-600 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-800'
+                          }`}
+                        >
+                          📋 {lang === "gu" ? "વિગત અને કાગળો" : "Checklist"}
+                        </button>
+                        <a
+                          href={scheme.portalUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full text-xs font-semibold py-2 px-2.5 rounded-xl bg-green-600 hover:bg-green-700 text-white transition text-center shadow-xs"
+                        >
+                          🔗 {lang === "gu" ? "અરજી કરો" : "Apply Now"}
+                        </a>
+                      </div>
+                      <button
+                        onClick={() => handleShareWhatsapp(scheme)}
+                        className="mt-2 w-full text-[11px] font-medium py-1 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-lg transition flex items-center justify-center gap-1"
+                      >
+                        <span>💬 {t.shareWhatsapp}</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* CALCULATOR */}
+          <section id="calculator" className={`py-12 px-4 sm:px-6 border-t transition-colors ${
+            isDark ? 'bg-slate-950 border-slate-800' : 'bg-gradient-to-b from-slate-100 to-white border-slate-200'
+          }`}>
+            <div className={`max-w-4xl mx-auto rounded-3xl p-6 sm:p-10 border shadow-md transition-colors ${
+              isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'
+            }`}>
+              <div className="text-center max-w-2xl mx-auto mb-8">
+                <span className="text-3xl">🧮</span>
+                <h3 className={`text-2xl font-bold mt-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>{t.calculatorTitle}</h3>
+                <p className={`text-xs sm:text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{t.calculatorSub}</p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label className={`block text-xs font-bold mb-2 ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+                    ૧. તમારી પાસે કેટલી ખેતીલાયક જમીન છે? (Land Holding)
+                  </label>
+                  <select
+                    value={quizLand}
+                    onChange={(e) => setQuizLand(e.target.value)}
+                    className={`w-full p-3 rounded-xl border text-xs sm:text-sm focus:border-green-600 focus:outline-none transition ${
+                      isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-800'
+                    }`}
+                  >
+                    <option value="">-- જમીન પસંદ કરો --</option>
+                    <option value="small">નાના અને સીમાંત ખેડૂત (૧ થી ૨ હેક્ટર સુધી)</option>
+                    <option value="medium">મધ્યમ ખેડૂત (૨ થી ૫ હેક્ટર સુધી)</option>
+                    <option value="large">મોટા ખેડૂત (૫ હેક્ટરથી વધુ)</option>
+                    <option value="landless">જમીન વિહોણા / પશુપાલક / ભાગીયા</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className={`block text-xs font-bold mb-2 ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+                    ૨. તમારી પ્રાથમિક જરૂરિયાત શું છે? (Main Requirement)
+                  </label>
+                  <select
+                    value={quizInterest}
+                    onChange={(e) => setQuizInterest(e.target.value)}
+                    className={`w-full p-3 rounded-xl border text-xs sm:text-sm focus:border-green-600 focus:outline-none transition ${
+                      isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-800'
+                    }`}
+                  >
+                    <option value="">-- જરૂરિયાત પસંદ કરો --</option>
+                    <option value="machinery">ટ્રેક્ટર અને ખેતી ઓજારો (i-Khedut Tractor)</option>
+                    <option value="processing">કોલ્ડ સ્ટોરેજ / એગ્રો પ્રોસેસિંગ (GAIC)</option>
+                    <option value="horticulture">ગ્રીનહાઉસ / બાગાયતી ખેતી (Horticulture)</option>
+                    <option value="animal">પશુપાલન અને કડબ કટર (Animal Husbandry)</option>
+                    <option value="irrigation">ટપક સિંચાઈ અથવા સોલાર પંપ (Drip & Solar)</option>
+                    <option value="financial">રોકડ સહાય અથવા સસ્તી લોન (PM-Kisan/KCC)</option>
+                    <option value="organic">ગાય આધારિત પ્રાકૃતિક ખેતી (Desi Cow)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className={`mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 pt-5 border-t ${
+                isDark ? 'border-slate-800' : 'border-slate-100'
+              }`}>
+                <div className="text-xs text-slate-400">
+                  {quizResultCount !== null && (
+                    <span className="font-semibold text-green-400 bg-green-950/60 px-3 py-1.5 rounded-lg border border-green-800">
+                      ✅ તમારા માટે {quizResultCount} યોજનાઓ ઉપલબ્ધ છે!
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={handleRunQuiz}
+                  className="w-full sm:w-auto px-6 py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-green-600/20 transition flex items-center justify-center gap-2"
+                >
+                  <span>{t.checkEligibilityBtn}</span> ➔
+                </button>
+              </div>
+            </div>
+          </section>
+
+          {/* HELPLINES */}
+          <section id="helplines" className="max-w-7xl mx-auto px-4 sm:px-6 py-8 w-full">
+            <div className={`rounded-3xl p-6 sm:p-10 text-white shadow-xl ${
+              isDark ? 'bg-gradient-to-r from-emerald-950 via-slate-900 to-green-950 border border-green-800' : 'bg-gradient-to-r from-emerald-800 to-green-900'
+            }`}>
+              <div className="max-w-4xl">
+                <span className="text-xs font-bold uppercase tracking-wider bg-white/10 px-3 py-1 rounded-full">
+                  ૨૪ x ૭ ખેડૂત માર્ગદર્શન સેવા
+                </span>
+                <h3 className="text-2xl sm:text-3xl font-extrabold mt-3">{t.helplineTitle}</h3>
+                <p className="text-xs sm:text-sm text-emerald-100 mt-1">
+                  કોઈપણ યોજના, i-Khedut અરજી, GAIC પ્રોસેસિંગ સબસિડી કે સહાય માટે ટોલ-ફ્રી નંબરો:
+                </p>
+
+                <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <a href="tel:18001801551" className="bg-white/10 hover:bg-white/20 backdrop-blur rounded-2xl p-4 border border-white/10 transition block group" title="કૉલ કરવા ટેપ કરો">
+                    <div className="text-xs text-emerald-200 font-medium">{t.kisanCallCenter}</div>
+                    <div className="text-lg font-black mt-1 text-white group-hover:text-amber-300 transition">📞 1800-180-1551</div>
+                    <div className="text-[10px] text-emerald-300 mt-1">સવારે ૬ થી રાત્રે ૧૦ (ટેપ કરીને કૉલ કરો)</div>
+                  </a>
+
+                  <a href="tel:07923256114" className="bg-white/10 hover:bg-white/20 backdrop-blur rounded-2xl p-4 border border-white/10 transition block group" title="કૉલ કરવા ટેપ કરો">
+                    <div className="text-xs text-emerald-200 font-medium">{t.ikhedutHelp}</div>
+                    <div className="text-lg font-black mt-1 text-white group-hover:text-amber-300 transition">📞 079-23256114</div>
+                    <div className="text-[10px] text-emerald-300 mt-1">કૃષિ ભવન, ગાંધીનગર (ટેપ કરીને કૉલ કરો)</div>
+                  </a>
+
+                  <a href="tel:07923240208" className="bg-white/10 hover:bg-white/20 backdrop-blur rounded-2xl p-4 border border-white/10 transition block group" title="કૉલ કરવા ટેપ કરો">
+                    <div className="text-xs text-emerald-200 font-medium">{t.gaicHelp}</div>
+                    <div className="text-lg font-black mt-1 text-white group-hover:text-amber-300 transition">📞 079-23240208</div>
+                    <div className="text-[10px] text-emerald-300 mt-1">GAIC એગ્રો પ્રોસેસિંગ સેલ (ટેપ કરીને કૉલ કરો)</div>
+                  </a>
+
+                  <a href="tel:18002332652" className="bg-white/10 hover:bg-white/20 backdrop-blur rounded-2xl p-4 border border-white/10 transition block group" title="કૉલ કરવા ટેપ કરો">
+                    <div className="text-xs text-emerald-200 font-medium">{t.ggrcHelp}</div>
+                    <div className="text-lg font-black mt-1 text-white group-hover:text-amber-300 transition">📞 1800-233-2652</div>
+                    <div className="text-[10px] text-emerald-300 mt-1">GGRC ટપક સિંચાઈ ટોલ ફ્રી (ટેપ કરીને કૉલ કરો)</div>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* DETAIL MODAL */}
+          {selectedScheme && (
+            <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+              <div className={`rounded-3xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl border overflow-hidden ${
+                isDark ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-100 text-slate-800'
+              }`}>
+                <div className="p-6 bg-gradient-to-r from-green-800 to-emerald-800 text-white flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl bg-white/10 p-2.5 rounded-2xl">{selectedScheme.icon}</span>
+                    <div>
+                      <span className="text-[11px] font-bold uppercase tracking-wider bg-white/20 px-2.5 py-0.5 rounded-full">
+                        {selectedScheme.sourceDept === "gaic" ? "GAIC યોજના" : selectedScheme.govType === "gujarat" ? "ગુજરાત સરકાર માન્ય" : "ભારત સરકાર માન્ય"}
+                      </span>
+                      <h3 className="text-lg sm:text-xl font-bold mt-1 text-white leading-snug">
+                        {lang === "gu" ? selectedScheme.title_gu : selectedScheme.title_en}
+                      </h3>
+                      <p className="text-xs text-amber-200 font-semibold mt-0.5">
+                        {lang === "gu" ? selectedScheme.dept_gu : selectedScheme.dept_en}
+                      </p>
+                    </div>
+                  </div>
+                  <button onClick={() => setSelectedScheme(null)} className="text-white/80 hover:text-white bg-white/10 hover:bg-white/20 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition">
+                    ✕
+                  </button>
+                </div>
+
+                <div className="p-6 overflow-y-auto custom-scrollbar space-y-5 text-xs sm:text-sm">
+                  <div className={`rounded-2xl p-4 border ${
+                    isDark ? 'bg-emerald-950/40 border-emerald-800 text-emerald-300' : 'bg-emerald-50 border-emerald-200 text-emerald-950'
+                  }`}>
+                    <h5 className="font-bold flex items-center gap-1.5 text-xs uppercase tracking-wide">
+                      <span>💰</span> {t.benefits}
+                    </h5>
+                    <p className={`font-medium mt-1 leading-relaxed ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+                      {lang === "gu" ? selectedScheme.benefit_gu : selectedScheme.benefit_en}
+                    </p>
+                  </div>
+
+                  <div>
+                    <h5 className="font-bold flex items-center gap-1.5 text-xs uppercase tracking-wide text-slate-400">
+                      <span>🎯</span> {t.eligibility}
+                    </h5>
+                    <p className={`mt-1 leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                      {lang === "gu" ? selectedScheme.eligibility_gu : selectedScheme.eligibility_en}
+                    </p>
+                  </div>
+
+                  <div className={`rounded-2xl p-4 border ${
+                    isDark ? 'bg-slate-800/80 border-slate-700' : 'bg-slate-50 border-slate-200'
+                  }`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <h5 className="font-bold flex items-center gap-1.5 text-xs uppercase tracking-wide">
+                        <span>📋</span> {t.docChecklist}
+                      </h5>
+                      <span className="text-[11px] text-slate-400">તમારા દસ્તાવેજ ટીક કરો</span>
+                    </div>
+                    
+                    <div className="space-y-2 mt-3">
+                      {(lang === "gu" ? selectedScheme.docs_gu : selectedScheme.docs_en).map((doc, idx) => {
+                        const checkKey = `${selectedScheme.id}-${idx}`;
+                        const isChecked = !!checkedDocs[checkKey];
+                        return (
+                          <label
+                            key={idx}
+                            onClick={() => handleDocCheck(selectedScheme.id, idx)}
+                            className={`flex items-start gap-3 p-2.5 rounded-xl border cursor-pointer transition select-none ${
+                              isChecked
+                                ? (isDark ? 'bg-emerald-950/60 border-emerald-700 text-emerald-300' : 'bg-emerald-50/80 border-emerald-300 text-emerald-900')
+                                : (isDark ? 'bg-slate-800 border-slate-700 hover:border-slate-600 text-slate-300' : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700')
+                            }`}
+                          >
+                            <input type="checkbox" checked={isChecked} readOnly className="mt-0.5 rounded text-green-600 focus:ring-0" />
+                            <span className={`text-xs ${isChecked ? 'line-through text-slate-400' : 'font-medium'}`}>{doc}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className={`flex items-center gap-2 text-xs p-3 rounded-xl border ${
+                    isDark ? 'bg-amber-950/40 border-amber-800 text-amber-200' : 'bg-amber-50 border-amber-200 text-amber-900'
+                  }`}>
+                    <span className="text-base">📅</span>
+                    <div>
+                      <span className="font-bold">{t.deadline}: </span>
+                      <span>{lang === "gu" ? selectedScheme.deadline_gu : selectedScheme.deadline_en}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={`p-5 border-t flex flex-col sm:flex-row items-center justify-between gap-3 ${
+                  isDark ? 'bg-slate-900 border-slate-800' : 'bg-slate-50 border-slate-200'
+                }`}>
+                  <button
+                    onClick={() => handleShareWhatsapp(selectedScheme)}
+                    className="w-full sm:w-auto text-xs font-semibold px-4 py-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 hover:bg-emerald-200 text-emerald-800 dark:text-emerald-300 transition flex items-center justify-center gap-1.5"
+                  >
+                    <span>💬 {t.shareWhatsapp}</span>
+                  </button>
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <button
+                      onClick={() => setSelectedScheme(null)}
+                      className={`w-1/2 sm:w-auto text-xs font-semibold px-4 py-2.5 rounded-xl transition ${
+                        isDark ? 'bg-slate-800 hover:bg-slate-700 text-slate-300' : 'bg-slate-200 hover:bg-slate-300 text-slate-700'
+                      }`}
+                    >
+                      બંધ કરો (Close)
+                    </button>
+                    <a
+                      href={selectedScheme.portalUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-1/2 sm:w-auto text-xs font-bold px-5 py-2.5 rounded-xl bg-green-600 hover:bg-green-700 text-white transition text-center shadow-md shadow-green-600/20"
+                    >
+                      {t.directApply} ➔
+                    </a>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          )}
+            </>
+
+{/* FOOTER */}
+          <footer className={`text-xs py-10 border-t transition-colors mt-auto ${
+            isDark ? 'bg-slate-950 border-slate-800 text-slate-400' : 'bg-slate-900 border-slate-800 text-slate-400'
+          }`}>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                <div>
+                  <div className="flex items-center gap-3 text-white font-bold text-base mb-2">
+                    <YDLogo size="w-10 h-10" />
+                    <div>
+                      <div className="text-white font-black">{t.portalName}</div>
+                      <div className="text-[11px] text-amber-300 font-semibold">
+                        Founder: Yash Dadhaniya (Village: Buri)
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-slate-400 text-xs leading-relaxed mt-2">
+                    Created & Developed by <b>Yash Dadhaniya (Village: Buri, Gujarat)</b> to empower farmers with transparent access to i-Khedut, GAIC, and Central government agricultural schemes.
+                  </p>
+                </div>
+
+                <div>
+                  <h5 className="text-white font-semibold mb-3 text-xs uppercase tracking-wider">
+                    Official Government Portals
+                  </h5>
+                  <ul className="space-y-2">
+                    <li>
+                      <a href="https://ikhedut.gujarat.gov.in" target="_blank" rel="noopener noreferrer" className="hover:text-green-400 transition flex items-center gap-1">
+                        ➔ i-Khedut Portal (ikhedut.gujarat.gov.in)
+                      </a>
+                    </li>
+                    <li>
+                      <a href="https://gaic.gujarat.gov.in" target="_blank" rel="noopener noreferrer" className="hover:text-amber-400 transition flex items-center gap-1">
+                        ➔ GAIC Agro Industries (gaic.gujarat.gov.in)
+                      </a>
+                    </li>
+                    <li>
+                      <a href="https://agri.gujarat.gov.in" target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition flex items-center gap-1">
+                        ➔ Department of Agriculture (agri.gujarat.gov.in)
+                      </a>
+                    </li>
+                    <li>
+                      <a href="https://pmkisan.gov.in" target="_blank" rel="noopener noreferrer" className="hover:text-green-400 transition flex items-center gap-1">
+                        ➔ PM-Kisan Portal (pmkisan.gov.in)
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h5 className="text-white font-semibold mb-3 text-xs uppercase tracking-wider">
+                    Farmer Support & Contact
+                  </h5>
+                  <p className="text-xs text-slate-400 leading-relaxed mb-2">
+                    For online application assistance, farmers can visit their nearest Gram Panchayat VCE center.
+                  </p>
+                  <div className="text-white font-semibold text-xs">
+                    Kisan Call Center: 1800-180-1551
+                  </div>
+                  <div className="mt-2 text-[11px] text-amber-300">
+                    Courtesy: Yash Dadhaniya, Village: Buri (Gujarat, India)
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
+                <p>{t.disclaimer}</p>
+                <p>© 2026 Gujarat Khedut Sahay Portal • Yash Dadhaniya (Village: Buri).</p>
+              </div>
+            </div>
+          </footer>
+
+        </div>
+      );
+    }
+
+    

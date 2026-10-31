@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ગુજરાત ખેડૂત સહાય પોર્ટલ | Gujarat Khedut Sahay Portal</title>
+  <meta name="description" content="ગુજરાત સરકાર અને ભારત સરકાર દ્વારા ખેડૂતો માટે આપવામાં આવતી તમામ યોજનાઓ, સબસિડી અને સહાયની માહિતી એક જ સ્થળે." />
+  
+  <!-- Google Fonts: Noto Sans Gujarati & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+Gujarati:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS CDN for instant styling in Vite dev -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            gujarati: ['"Noto Sans Gujarati"', 'Inter', 'sans-serif'],
+            sans: ['Inter', '"Noto Sans Gujarati"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased">
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>
