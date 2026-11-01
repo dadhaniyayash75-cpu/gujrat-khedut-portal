@@ -14,6 +14,10 @@ try {
   const clientDist = path.resolve('client', 'dist');
   const rootDist = path.resolve('dist');
 
+  if (fs.existsSync(rootDist)) {
+    fs.rmSync(rootDist, { recursive: true, force: true });
+  }
+
   if (fs.existsSync(clientDist)) {
     console.log('📂 Copying client/dist to root dist for Vercel compatibility...');
     fs.cpSync(clientDist, rootDist, { recursive: true, force: true });
