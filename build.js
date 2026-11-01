@@ -6,7 +6,7 @@ console.log('🚜 Building Gujarat Khedut Portal frontend...');
 
 try {
   console.log('📦 Installing client dependencies...');
-  execSync('npm --prefix client install', { stdio: 'inherit' });
+  execSync('npm --prefix client install --no-audit --no-fund', { stdio: 'inherit' });
 
   console.log('⚡ Running client production build (Vite)...');
   execSync('npm --prefix client run build', { stdio: 'inherit' });
